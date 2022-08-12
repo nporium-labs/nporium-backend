@@ -1,5 +1,8 @@
 const mongoose = require("mongoose"),
   userAccount = mongoose.model("userAccount"),
+  usersPaswords = mongoose.model("usersPasword"),
+  crypto = require("crypto"),
+  bcrypt = require("bcryptjs"),
   { body, validationResult } = require("express-validator"),
   loginController = require("../controller/loginController"),
   jwtwebtoken = require("jsonwebtoken"),
@@ -81,6 +84,30 @@ const isTokenValid = async (req, res, next) => {
   }
   next();
 };
+const isRestPaswordTokenValid = async (req, res, next) => {
+  if (!req.params.token) {
+    result.isError = true;
+    result.message = messages.tokenProvideMessage;
+    return res.status(404).send(result);
+  }
+
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+  //Checking the token expiration....
+  const userData = await usersPaswords.findOne({
+    token: resetPasswordToken,
+    tokenExpire: { $gt: Date.now() },
+  });
+
+  if (!userData && userData == null) {
+    result.isError = true;
+    result.message = messages.tokeExpired;
+    return res.status(404).send(result);
+  }
+  next();
+};
 
 module.exports = {
   isRegistered,
@@ -88,4 +115,5 @@ module.exports = {
   isGoogleAuthenticated,
   isUserExist,
   isTokenValid,
+  isRestPaswordTokenValid,
 };

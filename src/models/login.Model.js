@@ -1,4 +1,6 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose"),
+  crypto = require("crypto"),
+  bcrypt = require("bcryptjs");
 
 const userAccount = new mongoose.Schema({
   email: {
@@ -46,7 +48,6 @@ const userFind = async () => {
       isActive: true,
     });
     const result = await createUserObject.save();
-    console.log("result", result);
   }
 };
 userFind();

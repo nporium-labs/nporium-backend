@@ -2,6 +2,7 @@ const express = require("express"),
   expressValidator = require("express-validator"),
   bodyParser = require("body-parser"),
   formData = require("express-form-data"),
+  cors = require("cors"),
   proxy = require("http-proxy-middleware"),
   db = require("./src/models/db"),
   loginroutes = require("./src/routes/loginRoutes");
@@ -11,6 +12,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(formData.parse());
+app.use(cors());
+
 app.use(loginroutes);
 
 const port = process.env.PORT || 5000;

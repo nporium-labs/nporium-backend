@@ -7,6 +7,12 @@ require("dotenv").config();
 const app = express();
 
 router.post(
+  "/",
+  // dashboard
+  loginController.getHello
+);
+
+router.post(
   "/api/signup",
   // userMiddleWare.isRegistered,
   signup.isRegistered,
@@ -32,12 +38,35 @@ router.post(
 
 router.post(
   "/api/forgetPassword",
-  // userMiddleWare.isGoogleAuthenticated,
-  signup.isAuthenticated,
-  // userSignIn
+  // userMiddleWare.isUserExist,
+  signup.isUserExist,
+  // forgetPassword
   loginController.forgetPassword
 );
 
-router.get("/api/getUserData", loginController.getAllUsers);
+router.put(
+  "/api/updateNewPassword/:token",
+  // userMiddleWare.isRestPaswordTokenValid,
+  signup.isRestPaswordTokenValid,
+  // updateNewPassword
+  loginController.updateNewPassword
+);
 
+router.get(
+  "/api/getUserData",
+  // userMiddleWare.isTokenValid,
+  signup.isUserExist,
+  // signup.isTokenValid,
+  // getAllUsers
+  loginController.getAllUsers
+);
+
+router.post(
+  "/api/getUser",
+  // userMiddleWare.isGoogleAuthenticated,
+  signup.isUserExist,
+  signup.isTokenValid,
+  // userSignIn
+  loginController.getUser
+);
 module.exports = router;

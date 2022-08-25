@@ -14,7 +14,18 @@ const getUserMessage = "User data find successfully";
 const resetTokenIsNotValid =
   "Reset Token is not valid please try again later with new reset password link";
 const tokenProvideMessage = "Please provide token";
-const tokeExpired = "Invalid token, Token expired! Please request for new link";
+const tokeExpired =
+  "This password reset token is invalid, Token expired! Please request for new link";
+const userHaveRole = "User have already this role";
+const userNotHaveRole = "User does not have this role";
+const userRoleUpdated = "User role is updated successfully";
+const roleNotExist = "Plesae provide valid role";
+const jwtTokeExpired = "Invalid token, Token expired! Please login again";
+const userNotHaveRights = "You dont have rights";
+const invalidPayload = "Please provide valid payload";
+const accountNotApproved =
+  "There is an error while sending email please contact admin";
+const passwordResetTokenInvalid = "This password reset token is invalid";
 
 module.exports = {
   userRegistered,
@@ -31,4 +42,13 @@ module.exports = {
   resetTokenIsNotValid,
   tokenProvideMessage,
   tokeExpired,
+  userHaveRole,
+  userNotHaveRole,
+  userRoleUpdated,
+  jwtTokeExpired,
+  roleNotExist,
+  userNotHaveRights,
+  invalidPayload,
+  accountNotApproved,
+  passwordResetTokenInvalid,
 };

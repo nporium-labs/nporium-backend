@@ -54,19 +54,32 @@ router.put(
 
 router.get(
   "/api/getUserData",
-  // userMiddleWare.isTokenValid,
+  // userMiddleWare.isUserExist,
   signup.isUserExist,
-  // signup.isTokenValid,
   // getAllUsers
   loginController.getAllUsers
 );
 
 router.post(
   "/api/getUser",
-  // userMiddleWare.isGoogleAuthenticated,
-  signup.isUserExist,
-  signup.isTokenValid,
+  // userMiddleWare.isUserExist,isTokenValid
+  signup.isRegistered,
+  signup.isUserHaveRole,
   // userSignIn
   loginController.getUser
 );
+
+router.post(
+  "/api/addNewUserRole",
+  // userMiddleWare.isUserExist,isTokenValid
+  signup.isTokenValid,
+  signup.isUserExist,
+  signup.isRoleExist,
+  signup.isUserHaveRights,
+  signup.isUserHaveRole,
+
+  //   setNewRole,
+  loginController.setNewRole
+);
+
 module.exports = router;

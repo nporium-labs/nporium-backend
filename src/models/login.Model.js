@@ -1,6 +1,8 @@
 const mongoose = require("mongoose"),
   crypto = require("crypto"),
   bcrypt = require("bcryptjs");
+const { Super } = require("../utilities/roles");
+userRoles = require("../utilities/roles");
 
 const userAccount = new mongoose.Schema({
   email: {
@@ -26,6 +28,10 @@ const userAccount = new mongoose.Schema({
   isActive: {
     type: Boolean,
   },
+  roles: {
+    type: [Number],
+    default: [2001],
+  },
   date: {
     type: Date,
     default: Date.now,
@@ -39,15 +45,19 @@ const userFind = async () => {
     email: "admin@admin.com",
   });
   if (!user || user == null) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPass = await bcrypt.hash("@Admin123", salt);
     const createUserObject = userObject({
       email: "admin@admin.com",
-      firstName: "Super",
+      firstName: "Super Admin",
       lastName: "Admin",
-      password: "admin123",
+      password: hashedPass,
       imageUrl: "",
+      roles: [5150, 1984, 2001],
       isActive: true,
     });
     const result = await createUserObject.save();
+    console.log(result);
   }
 };
 userFind();

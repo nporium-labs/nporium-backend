@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 const user = require("./login.Model");
 const userPaswordTokens = require("./usersPasword");
+require("dotenv").config();
 
-const DB = ""; // your db connection string
 const connectDatabase = async () => {
   try {
-    await mongoose.connect(DB, {
+    await mongoose.connect(process.env.DATABASE, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

@@ -1,6 +1,8 @@
 const mongoose = require("mongoose"),
   userAccount = mongoose.model("userAccount"),
   usersPaswords = mongoose.model("usersPasword"),
+  postmark = require("postmark"),
+  FormData = require("form-data"),
   bcrypt = require("bcryptjs"),
   crypto = require("crypto"),
   sgMail = require("@sendgrid/mail"),
@@ -9,23 +11,18 @@ const mongoose = require("mongoose"),
   loginResult = require("../response/loginResponse"),
   userResult = require("../response/userResponse"),
   messages = require("../utilities/errormessages");
-// require("dotenv").config();
 
-// accessTokens for generating jwt
-const ACCESS_TOKEN_SECRET =
-  "d20be3df62802301c5969cf876fac9a70c41bf217f30956bc85adc7249d122b9d80e07f69dba640e57f273d5b84372fea51eeefd4f88d154f9d09f576358fd1b";
-const REFRESH_TOKEN_SECRET =
-  "82b1f980cf7d62ddd73a9ab619f682a7945cf2886440fd7668f33b9b06d475514238df9b4b40cc2b55abab671ff1f83ee83dd53201b4004726a1c1eba49d55ff";
-sgMail.setApiKey(
-  "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"
-);
+require("dotenv").config();
+
 const signup = async (req, res) => {
+  const salt = await bcrypt.genSalt(10);
+  const hashedPass = await bcrypt.hash(req.body.password, salt);
   const user = new userAccount({
     email: req.body.email,
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     imageUrl: req.body.imageUrl,
-    password: req.body.password,
+    password: hashedPass,
     isActive: true,
   });
 
@@ -39,18 +36,24 @@ const login = async (req, res) => {
   const userData = await userAccount
     .findOne({
       email: req.body.email,
-      password: req.body.password,
     })
-    .select({ firstName: 1, lastName: 1, email: 1 });
+    .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
   if (userData && userData != null) {
     let user = {
-      name: userData.firstName + userData.lastName,
+      name: userData.firstName,
       email: userData.email,
+      roles: userData.roles,
     };
-    const accessToken = jwtwebtoken.sign(user, ACCESS_TOKEN_SECRET);
+    const accessToken = jwtwebtoken.sign(
+      user,
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "60m",
+      }
+    );
     loginResult.isError = false;
     loginResult.message = messages.loginsuccess;
-    loginResult.userName = userData.firstName + " " + userData.lastName;
+    loginResult.userName = userData.firstName;
     loginResult.email = userData.email;
     loginResult.token = accessToken;
     return res.send({ loginResult });
@@ -58,12 +61,14 @@ const login = async (req, res) => {
 };
 
 const registerWithGoogle = async (req, res, next) => {
+  const salt = await bcrypt.genSalt(10);
+  const hashedPass = await bcrypt.hash(req.body.sub, salt);
   const user = new userAccount({
     email: req.body.email,
     firstName: req.body.name,
     lastName: req.body.family_name,
     imageUrl: req.body.picture,
-    password: req.body.sub,
+    password: hashedPass,
     isActive: true,
   });
 
@@ -76,17 +81,24 @@ const loginWithGoogle = async (req, res) => {
     .findOne({
       email: req.body.email,
     })
-    .select({ firstName: 1, lastName: 1, email: 1 });
+    .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
 
   if (userData && userData != null) {
     let user = {
       name: userData.firstName,
       email: userData.email,
+      roles: userData.roles,
     };
-    const accessToken = jwtwebtoken.sign(user, ACCESS_TOKEN_SECRET);
+    const accessToken = jwtwebtoken.sign(
+      user,
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "60m",
+      }
+    );
     loginResult.isError = false;
     loginResult.message = messages.loginsuccess;
-    loginResult.userName = userData.firstName + " " + userData.lastName;
+    loginResult.userName = userData.firstName;
     loginResult.email = userData.email;
     loginResult.token = accessToken;
     return res.send({ loginResult });
@@ -107,11 +119,40 @@ const getResetPasswordToken = async (req, res) => {
   return { resetToken, resetPasswordToken, resetTokenExpire };
 };
 
+const refreshToken = async (req, res) => {
+  const userData = await userAccount
+    .findOne({
+      email: req.body.email,
+    })
+    .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
+  if (userData && userData != null) {
+    let user = {
+      name: userData.firstName,
+      email: userData.email,
+      roles: userData.roles,
+    };
+    const accessToken = jwtwebtoken.sign(
+      user,
+      procces.env.REFRESH_TOKEN_SECRET,
+      {
+        expiresIn: "60m",
+      }
+    );
+    loginResult.isError = false;
+    loginResult.message = messages.loginsuccess;
+    loginResult.userName = userData.firstName;
+    loginResult.email = userData.email;
+    loginResult.token = accessToken;
+    return res.send({ loginResult });
+  }
+};
+
 const forgetPassword = async (req, res) => {
   const userData = await userAccount.findOne({
     email: req.body.email,
   });
   if (userData && userData != null) {
+    var client = new postmark.ServerClient(process.env.SERVER_API_TOKEN);
     const token = await getResetPasswordToken();
     const resetUrl = `https://nft-store-frontend-lzmqn7y6k-danishismail.vercel.app/forgot/${token.resetToken}`;
     const message = `
@@ -121,19 +162,18 @@ const forgetPassword = async (req, res) => {
         <p>if you did'nt request reset password,please ignore this email or reply us to let us know.This password reset
         is only valid for next 30 minutes.</p> <br>
         <p>Thanks</p>
-        <h2>nporium</h2>
+        <h2>Nporium Team </h2>
         <p>Contact us through email: nporium@gmail.com</p>
     `;
-    const msg = {
-      to: req.body.email, // recipient
-      from: "", // Change to your verified sender
-      subject: "RESET PASSWORD",
-      html: message,
-    };
+
     try {
-      sgMail.send(msg).then(() => {
-        // console.log("Email sent");
+      await client.sendEmail({
+        From: "sender@example.com",
+        To: req.body.email,
+        Subject: "RESET PASSWORD",
+        HtmlBody: message,
       });
+
       const usersPasword = new usersPaswords({
         email: req.body.email,
         token: token.resetPasswordToken,
@@ -144,7 +184,7 @@ const forgetPassword = async (req, res) => {
       result.message = messages.forgetPasswordMessage;
     } catch (err) {
       result.isError = true;
-      result.message = messages.forgetPasswordError;
+      result.message = messages.accountNotApproved;
     }
     return res.send({ result });
   }
@@ -166,13 +206,26 @@ const updateNewPassword = async (req, res) => {
         email: userData.email,
       })
       .select({ email: 1, password: 1 });
-    user.password = req.body.password;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPass = await bcrypt.hash(req.body.password, salt);
+    user.password = hashedPass;
     const data = await user.save();
     const response = await usersPaswords.deleteOne({ email: userData.email });
     result.isError = false;
     result.message = messages.updatePasswordMessage;
     return res.send({ result });
   }
+};
+
+const setNewRole = async (req, res) => {
+  const userData = await userAccount
+    .findOne({
+      email: req.body.email,
+    })
+    .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
+  result.isError = false;
+  result.message = messages.userRoleUpdated;
+  return res.send(result);
 };
 
 const getAllUsers = async (req, res) => {
@@ -196,6 +249,7 @@ const getUser = async (req, res) => {
 const getHello = async (req, res) => {
   return res.send("hello");
 };
+
 module.exports = {
   signup,
   login,
@@ -207,4 +261,6 @@ module.exports = {
   getHello,
   updateNewPassword,
   getResetPasswordToken,
+  setNewRole,
+  refreshToken,
 };

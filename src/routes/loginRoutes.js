@@ -6,7 +6,7 @@ const express = require("express"),
 require("dotenv").config();
 const app = express();
 
-router.post(
+router.get(
   "/",
   // dashboard
   loginController.getHello
@@ -77,7 +77,6 @@ router.post(
   signup.isRoleExist,
   signup.isUserHaveRights,
   signup.isUserHaveRole,
-
   //   setNewRole,
   loginController.setNewRole
 );

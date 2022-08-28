@@ -1,5 +1,4 @@
 const express = require("express"),
-  expressValidator = require("express-validator"),
   bodyParser = require("body-parser"),
   formData = require("express-form-data"),
   postmark = require("postmark"),
@@ -12,26 +11,22 @@ loginroutes = require("./src/routes/loginRoutes");
 require("dotenv").config();
 const app = express();
 
-const whitelist = [
-  "https://vercel.com/danishismail/nft-store-frontend",
-  "https://nft-store-frontend-nine.vercel.app",
-  "http://localhost:3000",
-  "https://nftmarketbackendapp.herokuapp.com",
-];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+var corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3000/*",
+    "https://nft-store-frontend-nine.vercel.app",
+    "https://nft-store-frontend-nine.vercel.app/*",
+    "https://nftmarketbackendapp.herokuapp.com",
+    "https://nftmarketbackendapp.herokuapp.com/*",
+  ],
+  credentials: false,
 };
-app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors(corsOptions));
-
 app.use(loginroutes);
 
 const port = process.env.PORT || 5000;

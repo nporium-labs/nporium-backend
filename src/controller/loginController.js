@@ -15,21 +15,27 @@ const mongoose = require("mongoose"),
 require("dotenv").config();
 
 const signup = async (req, res) => {
-  const salt = await bcrypt.genSalt(10);
-  const hashedPass = await bcrypt.hash(req.body.password, salt);
-  const user = new userAccount({
-    email: req.body.email,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    imageUrl: req.body.imageUrl,
-    password: hashedPass,
-    isActive: true,
-  });
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPass = await bcrypt.hash(req.body.password, salt);
+    const user = {
+      email: req.body.email,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      imageUrl: req.body.imageUrl,
+      password: hashedPass,
+      isActive: true,
+    };
 
-  const response = await user.save();
-  result.isError = false;
-  result.message = messages.userRegistered;
-  return res.send(result);
+    const response = await userAccount.create(user);
+    result.isError = false;
+    result.message = messages.userRegistered;
+    res.send(result);
+  } catch (error) {
+    result.isError = true;
+    result.message = error.message;
+    res.send(result);
+  }
 };
 
 const login = async (req, res) => {
@@ -60,48 +66,53 @@ const login = async (req, res) => {
   }
 };
 
-const registerWithGoogle = async (req, res, next) => {
+const registerWithGoogle = async (req) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPass = await bcrypt.hash(req.body.sub, salt);
-  const user = new userAccount({
+  const user = {
     email: req.body.email,
     firstName: req.body.name,
     lastName: req.body.family_name,
     imageUrl: req.body.picture,
     password: hashedPass,
     isActive: true,
-  });
+  };
 
-  await user.save();
-  next();
+  await userAccount.create(user);
 };
 
 const loginWithGoogle = async (req, res) => {
-  const userData = await userAccount
-    .findOne({
-      email: req.body.email,
-    })
-    .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
+  try {
+    const userData = await userAccount
+      .findOne({
+        email: req.body.email,
+      })
+      .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
+    if (userData && userData != null) {
+      let user = {
+        name: userData.firstName,
+        email: userData.email,
+        roles: userData.roles,
+      };
+      const accessToken = jwtwebtoken.sign(
+        user,
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: "60m",
+        }
+      );
 
-  if (userData && userData != null) {
-    let user = {
-      name: userData.firstName,
-      email: userData.email,
-      roles: userData.roles,
-    };
-    const accessToken = jwtwebtoken.sign(
-      user,
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "60m",
-      }
-    );
+      loginResult.isError = false;
+      loginResult.message = messages.loginsuccess;
+      loginResult.userName = userData.firstName;
+      loginResult.email = userData.email;
+      loginResult.token = accessToken;
+    }
+    res.status(200).send({ loginResult });
+  } catch (error) {
     loginResult.isError = false;
-    loginResult.message = messages.loginsuccess;
-    loginResult.userName = userData.firstName;
-    loginResult.email = userData.email;
-    loginResult.token = accessToken;
-    return res.send({ loginResult });
+    loginResult.message = messages.loginError;
+    res.status(400).send({ loginResult });
   }
 };
 

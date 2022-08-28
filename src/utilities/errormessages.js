@@ -4,6 +4,7 @@ const userEmailNotValid = "User email is not valid";
 const userExist = "User already exist exist";
 const emailNotSend = "Could not send the email";
 const loginsuccess = "login successfully";
+const loginError = "There is an issue while login";
 const resgisterError = "There is an issue in register user";
 const forgetPasswordMessage =
   "Reset password link send to you email Please check your email";
@@ -51,4 +52,5 @@ module.exports = {
   invalidPayload,
   accountNotApproved,
   passwordResetTokenInvalid,
+  loginError,
 };

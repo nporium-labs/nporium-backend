@@ -95,14 +95,14 @@ const isGoogleAuthenticated = async (req, res, next) => {
       });
 
       if (!user || user == null) {
-        await loginController.registerWithGoogle(req, res, next);
+        await loginController.registerWithGoogle(req);
       }
+      next();
     } else {
       result.isError = true;
       result.message = messages.invalidPayload;
       return res.status(404).send(result);
     }
-    next();
   } catch (error) {
     result.isError = true;
     result.message = messages.error;

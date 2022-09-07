@@ -13,8 +13,25 @@ const mongoose = require("mongoose"),
   result = require("../response/result"),
   messages = require("../utilities/errormessages");
 const e = require("express");
-const { admin } = require("../utilities/roles");
+const { admin, superAdmin } = require("../utilities/roles");
 require("dotenv").config();
+
+const fileStorageEngine = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // console.log(__dirname);
+    cb(null, path.join(__dirname, "../../public/assets"));
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: fileStorageEngine });
+
+const uploadedToIpfc = (req, res, next) => {
+  upload.single("media");
+  next();
+};
 
 const isEmailIsValid = (email) => {
   return /\S+@\S+\.\S+/.test(email);
@@ -81,6 +98,32 @@ const isAuthenticated = async (req, res, next) => {
     }
     next();
   } catch (error) {
+    result.isError = true;
+    result.message = messages.error;
+    return res.status(404).send(result);
+  }
+};
+
+const isUserSessionAuthenticated = async (req, res, next) => {
+  try {
+    if (
+      req.session.isAuth &&
+      req.session.userId &&
+      req.headers.sessionid === req.session.userId
+    ) {
+      const user = await userAccount.findOne({
+        _id: req.session.userId,
+      });
+      if (user && user != null) {
+        next();
+      }
+    } else {
+      req.session.error = messages.sessionError;
+      result.isError = true;
+      result.message = messages.sessionError;
+      res.status(404).send(result);
+    }
+  } catch (err) {
     result.isError = true;
     result.message = messages.error;
     return res.status(404).send(result);
@@ -227,16 +270,15 @@ const isUserHaveRole = async (req, res, next) => {
 
 const isUserHaveRights = async (req, res, next) => {
   try {
-    if (req.user?.email) {
-      req.user.email = req.user.email.toLowerCase();
-
+    if (req.headers?.sessionid) {
       const user = await userAccount.findOne({
-        email: req.user.email,
+        _id: req.headers.sessionid,
       });
       if (
         user &&
         user != null &&
-        user.roles.includes(userRoles[admin] == false)
+        (user.roles.includes(userRoles[admin] == false) ||
+          user.roles.includes(userRoles[superAdmin] == false))
       ) {
         result.isError = true;
         result.message = messages.userNotHaveRights;
@@ -250,7 +292,86 @@ const isUserHaveRights = async (req, res, next) => {
     next();
   } catch (error) {
     result.isError = true;
-    result.message = messages.error;
+    result.message = error.message;
+    return res.status(404).send(result);
+  }
+};
+
+const isNFTDataValid = async (req, res, next) => {
+  try {
+    if (req.body?.name && req.body?.description && req?.file) {
+      next();
+    } else {
+      result.isError = true;
+      result.message = messages.invalidPayload;
+      return res.status(404).send(result);
+    }
+  } catch (error) {
+    result.isError = true;
+    result.message = error.message;
+    return res.status(404).send(result);
+  }
+};
+
+const isSaleListDataValid = async (req, res, next) => {
+  try {
+    if (req.body?.tokenId && req.body?.price) {
+      next();
+    } else {
+      result.isError = true;
+      result.message = messages.invalidPayload;
+      return res.status(404).send(result);
+    }
+  } catch (error) {
+    result.isError = true;
+    result.message = error.message;
+    return res.status(404).send(result);
+  }
+};
+
+const isSaleUnListDataValid = async (req, res, next) => {
+  try {
+    if (req.body?.tokenId) {
+      next();
+    } else {
+      result.isError = true;
+      result.message = messages.invalidPayload;
+      return res.status(404).send(result);
+    }
+  } catch (error) {
+    result.isError = true;
+    result.message = error.message;
+    return res.status(404).send(result);
+  }
+};
+const isUpdatelistNFTPriceValid = async (req, res, next) => {
+  try {
+    if (req.body?.price) {
+      next();
+    } else {
+      result.isError = true;
+      result.message = messages.invalidPayload;
+      return res.status(404).send(result);
+    }
+  } catch (error) {
+    result.isError = true;
+    result.message = error.message;
+    return res.status(404).send(result);
+  }
+};
+
+const isMarketOrRoyalityValid = async (req, res, next) => {
+  try {
+    if (req.body?.value) {
+      next();
+    } else {
+      result.isError = true;
+      result.message = messages.invalidPayload;
+      return res.status(404).send(result);
+    }
+  } catch (error) {
+    result.isError = true;
+    result.message = error.message;
     return res.status(404).send(result);
   }
 };
@@ -266,4 +387,12 @@ module.exports = {
   isUserHaveRole,
   isRoleExist,
   isUserHaveRights,
+  uploadedToIpfc,
+  upload,
+  isUserSessionAuthenticated,
+  isNFTDataValid,
+  isSaleListDataValid,
+  isSaleUnListDataValid,
+  isUpdatelistNFTPriceValid,
+  isMarketOrRoyalityValid,
 };

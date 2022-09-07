@@ -5,4 +5,5 @@ const loginResult = {
   token: String,
   userName: String,
   email: String,
+  role: Number,
 };

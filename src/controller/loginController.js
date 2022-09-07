@@ -8,6 +8,7 @@ const mongoose = require("mongoose"),
   sgMail = require("@sendgrid/mail"),
   jwtwebtoken = require("jsonwebtoken"),
   result = require("../response/result"),
+  uploadData = require("../utilities/loginHelper"),
   loginResult = require("../response/loginResponse"),
   userResult = require("../response/userResponse"),
   messages = require("../utilities/errormessages");
@@ -45,23 +46,14 @@ const login = async (req, res) => {
     })
     .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
   if (userData && userData != null) {
-    let user = {
-      name: userData.firstName,
-      email: userData.email,
-      roles: userData.roles,
-    };
-    const accessToken = jwtwebtoken.sign(
-      user,
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "60m",
-      }
-    );
     loginResult.isError = false;
     loginResult.message = messages.loginsuccess;
     loginResult.userName = userData.firstName;
     loginResult.email = userData.email;
-    loginResult.token = accessToken;
+    loginResult.role = userData.roles[0];
+    req.session.isAuth = true;
+    req.session.userId = userData._id;
+    res.set("sessionId", req.session.userId);
     return res.send({ loginResult });
   }
 };
@@ -89,30 +81,19 @@ const loginWithGoogle = async (req, res) => {
       })
       .select({ firstName: 1, lastName: 1, email: 1, roles: 1 });
     if (userData && userData != null) {
-      let user = {
-        name: userData.firstName,
-        email: userData.email,
-        roles: userData.roles,
-      };
-      const accessToken = jwtwebtoken.sign(
-        user,
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-          expiresIn: "60m",
-        }
-      );
-
       loginResult.isError = false;
       loginResult.message = messages.loginsuccess;
       loginResult.userName = userData.firstName;
       loginResult.email = userData.email;
-      loginResult.token = accessToken;
+      loginResult.role = userData.roles[0];
+      req.session.isAuth = true;
+      req.session.userId = userData._id;
+      res.set("sessionId", req.session.userId);
     }
     res.status(200).send({ loginResult });
   } catch (error) {
-    loginResult.isError = false;
-    loginResult.message = messages.loginError;
-    res.status(400).send({ loginResult });
+    loginResult.isError = true;
+    loginResult.message = error.message;
   }
 };
 
@@ -239,6 +220,30 @@ const setNewRole = async (req, res) => {
   return res.send(result);
 };
 
+const logOut = async (req, res) => {
+  try {
+    if (
+      req.session.isAuth &&
+      req.session.userId &&
+      req.headers.sessionid === req.session.userId
+    ) {
+      req.session.destroy();
+      result.isError = false;
+      result.message = messages.logOutSuccess;
+      res.status(200).send(result);
+    } else {
+      result.isError = true;
+      result.message = messages.logOutError;
+      res.status(400).send(result);
+    }
+  } catch (error) {
+    // console.log("error", error.message);
+    result.isError = true;
+    result.message = error.message;
+    res.status(400).send(result);
+  }
+};
+
 const getAllUsers = async (req, res) => {
   let userData = await userAccount.find();
   return res.send(userData);
@@ -274,4 +279,5 @@ module.exports = {
   getResetPasswordToken,
   setNewRole,
   refreshToken,
+  logOut,
 };

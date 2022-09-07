@@ -53,11 +53,10 @@ const userFind = async () => {
       lastName: "Admin",
       password: hashedPass,
       imageUrl: "",
-      roles: [5150, 1984, 2001],
+      roles: [1984, 5150],
       isActive: true,
     });
     const result = await createUserObject.save();
-    console.log(result);
   }
 };
 userFind();

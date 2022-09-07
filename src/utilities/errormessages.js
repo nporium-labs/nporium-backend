@@ -27,6 +27,36 @@ const invalidPayload = "Please provide valid payload";
 const accountNotApproved =
   "There is an error while sending email please contact admin";
 const passwordResetTokenInvalid = "This password reset token is invalid";
+const sessionError = "Session expired please login first";
+const logOutSuccess = "logout successfully";
+const logOutError = "There is an issue while logout";
+const nftMintedSuccess =
+  "NFT Minted and deposit to your collection successfully";
+const nftMintedError = "There is an error while NFT Minting";
+const nftListedSuccess = "NFT listed for sale successfully";
+const nftListedError = "There is an error while NFT listed for sale";
+const nftUnListedSuccess = "NFT Unlisted from sale successfully";
+const nftUnListedError = "There is an error while NFT Unlisting from sale";
+const nftPriceUpdatedSuccess = "NFT listed price for sale successfully";
+const nftPriceUpdatedError =
+  "There is an error while updating NFT listed price for sale";
+const nftRoyalityUpdatedSuccess = "royality updated successfully";
+const nftRoyalityUpdatedError = "There is an error while updating royality";
+const nftMarketCutUpdatedSuccess = "marketcut updated successfully";
+const nftMarketCutUpdatedError = "There is an error while updating marketcut";
+const createSaleCollectionSuccess = "sale collection created successfully";
+const createSaleCollectionError =
+  "There is an error while creating sale collection";
+const createNFTCollectionSuccess = "NFT collection created successfully";
+const createNFTCollectionError =
+  "There is an error while creating NFT collection";
+const getAllListedNFTsByUserSuccess =
+  "get the user NFT Collection successfully";
+const getAllListedNFTsByUserError = "Could not NFT collection";
+const getUserNFTsSuccess = "get the user NFTs successfully";
+const getUserNFTsError = "Could not NFTs";
+const getUserBalanceSuccess = "get the user NFTs successfully";
+const getUserBalanceError = "Could not NFTs";
 
 module.exports = {
   userRegistered,
@@ -53,4 +83,29 @@ module.exports = {
   accountNotApproved,
   passwordResetTokenInvalid,
   loginError,
+  sessionError,
+  logOutSuccess,
+  logOutError,
+  nftMintedSuccess,
+  nftMintedError,
+  nftListedSuccess,
+  nftListedError,
+  nftUnListedSuccess,
+  nftUnListedError,
+  nftPriceUpdatedSuccess,
+  nftPriceUpdatedError,
+  nftRoyalityUpdatedSuccess,
+  nftRoyalityUpdatedError,
+  nftMarketCutUpdatedSuccess,
+  nftMarketCutUpdatedError,
+  createSaleCollectionSuccess,
+  createSaleCollectionError,
+  createNFTCollectionSuccess,
+  createNFTCollectionError,
+  getAllListedNFTsByUserSuccess,
+  getAllListedNFTsByUserError,
+  getUserNFTsSuccess,
+  getUserNFTsError,
+  getUserBalanceSuccess,
+  getUserBalanceError,
 };

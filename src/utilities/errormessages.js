@@ -37,7 +37,7 @@ const nftListedSuccess = "NFT listed for sale successfully";
 const nftListedError = "There is an error while NFT listed for sale";
 const nftUnListedSuccess = "NFT Unlisted from sale successfully";
 const nftUnListedError = "There is an error while NFT Unlisting from sale";
-const nftPriceUpdatedSuccess = "NFT listed price for sale successfully";
+const nftPriceUpdatedSuccess = "NFT listed price updated for sale successfully";
 const nftPriceUpdatedError =
   "There is an error while updating NFT listed price for sale";
 const nftRoyalityUpdatedSuccess = "royality updated successfully";
@@ -57,6 +57,8 @@ const getUserNFTsSuccess = "get the user NFTs successfully";
 const getUserNFTsError = "Could not NFTs";
 const getUserBalanceSuccess = "get the user NFTs successfully";
 const getUserBalanceError = "Could not NFTs";
+const getUserSessionSuccess = "User have sessions";
+const getUserSessionError = "User don't have sessions";
 
 module.exports = {
   userRegistered,
@@ -108,4 +110,6 @@ module.exports = {
   getUserNFTsError,
   getUserBalanceSuccess,
   getUserBalanceError,
+  getUserSessionSuccess,
+  getUserSessionError,
 };

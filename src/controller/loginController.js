@@ -52,8 +52,8 @@ const login = async (req, res) => {
     loginResult.email = userData.email;
     loginResult.role = userData.roles[0];
     req.session.isAuth = true;
-    req.session.userId = userData._id;
-    res.set("sessionId", req.session.userId);
+    req.session.loggedUserId = userData._id;
+    res.set("Session-Id", req.session.loggedUserId);
     return res.send({ loginResult });
   }
 };
@@ -87,13 +87,14 @@ const loginWithGoogle = async (req, res) => {
       loginResult.email = userData.email;
       loginResult.role = userData.roles[0];
       req.session.isAuth = true;
-      req.session.userId = userData._id;
-      res.set("sessionId", req.session.userId);
+      req.session.loggedUserId = userData._id;
+      res.set("Session-Id", req.session.loggedUserId);
     }
     res.status(200).send({ loginResult });
   } catch (error) {
     loginResult.isError = true;
     loginResult.message = error.message;
+    res.status(400).send(result);
   }
 };
 
@@ -222,11 +223,7 @@ const setNewRole = async (req, res) => {
 
 const logOut = async (req, res) => {
   try {
-    if (
-      req.session.isAuth &&
-      req.session.userId &&
-      req.headers.sessionid === req.session.userId
-    ) {
+    if (req.session) {
       req.session.destroy();
       result.isError = false;
       result.message = messages.logOutSuccess;
@@ -237,7 +234,6 @@ const logOut = async (req, res) => {
       res.status(400).send(result);
     }
   } catch (error) {
-    // console.log("error", error.message);
     result.isError = true;
     result.message = error.message;
     res.status(400).send(result);
@@ -266,6 +262,25 @@ const getHello = async (req, res) => {
   return res.send("hello");
 };
 
+const checkUserSession = async (req, res) => {
+  try {
+    if (req.session) {
+      result.isError = false;
+      result.message = messages.getUserSessionSuccess;
+      res.status(200).send(result);
+    } else {
+      req.session.error = messages.sessionError;
+      result.isError = true;
+      result.message = messages.sessionError;
+      res.status(404).send(result);
+    }
+  } catch (err) {
+    result.isError = true;
+    result.message = messages.error;
+    return res.status(404).send(result);
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -280,4 +295,5 @@ module.exports = {
   setNewRole,
   refreshToken,
   logOut,
+  checkUserSession,
 };

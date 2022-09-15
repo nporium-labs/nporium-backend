@@ -6,8 +6,10 @@ const ec = new EC("secp256k1");
 
 require("dotenv").config();
 
+const ADDRESS = `${process.env.ACCOUNT_ADDRESS}`;
+const PRIVATE_KEY = `${process.env.MY_PRIVATE_KEY}`;
 const sign = (message) => {
-  const key = ec.keyFromPrivate(Buffer.from(process.env.MY_PRIVATE_KEY, "hex"));
+  const key = ec.keyFromPrivate(Buffer.from(PRIVATE_KEY, "hex"));
   const sig = key.sign(hash(message)); // hashMsgHex -> hash
   const n = 32;
   const r = sig.r.toArrayLike(Buffer, "be", n);
@@ -24,12 +26,12 @@ const hash = (message) => {
 const authorizationFunction = async (account) => {
   return {
     ...account,
-    tempId: `${process.env.MY_ADDRESS}-${process.env.ACCOUNT_KEY_ID}`,
-    addr: fcl.sansPrefix(process.env.MY_ADDRESS),
+    tempId: `${ADDRESS}-${process.env.ACCOUNT_KEY_ID}`,
+    addr: fcl.sansPrefix(ADDRESS),
     keyId: Number(process.env.ACCOUNT_KEY_ID),
     signingFunction: async (signable) => {
       return {
-        addr: fcl.withPrefix(process.env.MY_ADDRESS),
+        addr: fcl.withPrefix(ADDRESS),
         keyId: Number(process.env.ACCOUNT_KEY_ID),
         signature: sign(signable.message),
       };
@@ -46,12 +48,12 @@ const authorizationFunctionProposer = async (account) => {
 
   return {
     ...account,
-    tempId: `${process.env.MY_ADDRESS}-${KEY_ID_ITERABLE}`,
-    addr: fcl.sansPrefix(process.env.MY_ADDRESS),
+    tempId: `${ADDRESS}-${KEY_ID_ITERABLE}`,
+    addr: fcl.sansPrefix(ADDRESS),
     keyId: Number(KEY_ID_ITERABLE),
     signingFunction: async (signable) => {
       return {
-        addr: fcl.withPrefix(process.env.MY_ADDRESS),
+        addr: fcl.withPrefix(ADDRESS),
         keyId: Number(KEY_ID_ITERABLE),
         signature: sign(signable.message),
       };

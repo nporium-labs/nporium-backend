@@ -18,15 +18,22 @@ require("dotenv").config();
 
 const fileStorageEngine = multer.diskStorage({
   destination: (req, file, cb) => {
-    // console.log(__dirname);
     cb(null, path.join(__dirname, "../../public/assets"));
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
+    const fullFilename = Date.now() + file.originalname;
+    file["fullFileName"] = fullFilename;
+    cb(null, fullFilename);
   },
 });
 
 const upload = multer({ storage: fileStorageEngine });
+
+var multipleUpload = upload.fields([
+  { name: "avatar", maxCount: 1 },
+  { name: "artistCollectionAvatar", maxCount: 1 },
+  { name: "media", maxCount: 1 },
+]);
 
 const uploadedToIpfc = (req, res, next) => {
   upload.single("media");
@@ -106,13 +113,9 @@ const isAuthenticated = async (req, res, next) => {
 
 const isUserSessionAuthenticated = async (req, res, next) => {
   try {
-    if (
-      req.session.isAuth &&
-      req.session.userId &&
-      req.headers.sessionid === req.session.userId
-    ) {
+    if (req.session && req.headers.sessionid) {
       const user = await userAccount.findOne({
-        _id: req.session.userId,
+        _id: req.headers.sessionid,
       });
       if (user && user != null) {
         next();
@@ -123,9 +126,9 @@ const isUserSessionAuthenticated = async (req, res, next) => {
       result.message = messages.sessionError;
       res.status(404).send(result);
     }
-  } catch (err) {
+  } catch (error) {
     result.isError = true;
-    result.message = messages.error;
+    result.message = error.message;
     return res.status(404).send(result);
   }
 };
@@ -299,7 +302,13 @@ const isUserHaveRights = async (req, res, next) => {
 
 const isNFTDataValid = async (req, res, next) => {
   try {
-    if (req.body?.name && req.body?.description && req?.file) {
+    if (
+      req.body?.name &&
+      req.body?.description &&
+      req?.files &&
+      req.body?.artist &&
+      req.body?.category
+    ) {
       next();
     } else {
       result.isError = true;
@@ -389,6 +398,7 @@ module.exports = {
   isUserHaveRights,
   uploadedToIpfc,
   upload,
+  multipleUpload,
   isUserSessionAuthenticated,
   isNFTDataValid,
   isSaleListDataValid,

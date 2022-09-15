@@ -6,14 +6,13 @@ const FormData = require("form-data"),
 require("dotenv").config();
 
 const uploadToPinata = async (pinataApiKey, pinataSecretApiKey, imageName) => {
-  console.log("we are helper");
   const pinata = pinataSDK(pinataApiKey, pinataSecretApiKey);
   const readableStreamForFile = fs.createReadStream(
     path.join(__dirname, `../../public/assets/${imageName}`)
   );
   const options = {
     pinataMetadata: {
-      name: imageName + Date.now(),
+      name: imageName,
       keyvalues: {
         customKey: "customValue",
         customKey2: "customValue2",
@@ -34,9 +33,11 @@ const uploadToPinata = async (pinataApiKey, pinataSecretApiKey, imageName) => {
         if (err) throw err;
 
         for (const file of files) {
-          fs.unlink(path.join(directory, file), (err) => {
-            if (err) return err;
-          });
+          if (file == imageName) {
+            fs.unlink(path.join(directory, file), (err) => {
+              if (err) return err;
+            });
+          }
         }
       });
       return url;

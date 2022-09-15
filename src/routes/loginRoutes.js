@@ -70,7 +70,7 @@ router.post(
   signup.isUserSessionAuthenticated,
   signup.isRegistered,
   signup.isUserHaveRole,
-  // userSignIn
+  // getUser
   loginController.getUser
 );
 
@@ -89,7 +89,7 @@ router.post(
 router.post(
   "/api/logout",
   // userMiddleWare.isUserSessionAuthenticated
-  signup.isUserSessionAuthenticated,
+  // signup.isUserSessionAuthenticated,
   //   logOut,
   loginController.logOut
 );
@@ -99,7 +99,7 @@ router.post(
   // userMiddleWare.isUserSessionAuthenticated, isUserHaveRights, isNFTDataValid, upload.single("media")
   signup.isUserSessionAuthenticated,
   signup.isUserHaveRights,
-  signup.upload.single("media"),
+  signup.multipleUpload,
   signup.isNFTDataValid,
   //   mintNFT,
   adminController.mintNFT
@@ -111,7 +111,7 @@ router.post(
   signup.isUserSessionAuthenticated,
   signup.isUserHaveRights,
   signup.isSaleListDataValid,
-  //   mintNFT,
+  //   listNFTForSale,
   adminController.listNFTForSale
 );
 
@@ -131,7 +131,7 @@ router.post(
   signup.isUserSessionAuthenticated,
   signup.isUserHaveRights,
   signup.isUpdatelistNFTPriceValid,
-  //   unlistNFTFromSale,
+  //   updatelistNFTPrice,
   adminController.updatelistNFTPrice
 );
 
@@ -151,8 +151,15 @@ router.post(
   signup.isUserSessionAuthenticated,
   signup.isUserHaveRights,
   signup.isMarketOrRoyalityValid,
-  //   updateRoyalityCut,
+  //   updateMarketingCut,
   adminController.updateMarketingCut
+);
+
+router.get(
+  "/api/checkUserSession",
+  // userMiddleWare.isUserExist,
+  // checkUserSession
+  loginController.checkUserSession
 );
 
 module.exports = router;

@@ -5,6 +5,7 @@ const mongoose = require("mongoose"),
   bcrypt = require("bcryptjs"),
   crypto = require("crypto"),
   result = require("../response/result"),
+  path = require("path"),
   uploadData = require("../utilities/loginHelper"),
   blockchainScripts = require("../utilities/helpers/blockChainScripts"),
   loginResult = require("../response/loginResponse"),
@@ -15,23 +16,33 @@ require("dotenv").config();
 
 const mintNFT = async (req, res) => {
   try {
-    if (req.body.name && req.body.description && req.file) {
-      //   const data = [{ key: "artist", value: "danish" }];
-      var data = [];
-      if (req.body?.artist) {
-        data = [{ key: "artist", value: req.body?.artist }];
-      }
-
+    if (
+      req.body.name &&
+      req.body.description &&
+      req.files &&
+      req.body.artist &&
+      req.body.category
+    ) {
       const response = await uploadData.uploadToPinata(
         process.env.MY_PINATA_API_KEY,
         process.env.MY_PINATA_SECRET_KEY,
-        req.file.originalname
+        req.files.media[0].fullFileName
       );
+
+      const directory = `${process.env.PRODUCTION_SERVER_URL}/assets/`;
+      let avatarUrl = `${directory + req.files.avatar[0].fullFileName}`;
+      let avatarCollectionUrl = `${
+        directory + req.files.artistCollectionAvatar[0].fullFileName
+      }`;
+
       const mintNFTs = await blockchainScripts.mintNFT(
         req.body.name,
         req.body.description,
-        data,
-        response
+        response,
+        req.body.artist,
+        req.body.category,
+        avatarUrl,
+        avatarCollectionUrl
       );
       result.isError = false;
       result.message = messages.nftMintedSuccess;
@@ -43,7 +54,11 @@ const mintNFT = async (req, res) => {
     }
   } catch (error) {
     result.isError = true;
-    result.message = error;
+    if (error.message) {
+      result.message = error.message;
+    } else {
+      result.message = error;
+    }
     res.status(400).send(result);
   }
 };

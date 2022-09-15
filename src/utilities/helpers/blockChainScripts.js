@@ -9,26 +9,40 @@ require("dotenv").config();
 
 fcl.config().put("accessNode.api", "https://rest-testnet.onflow.org");
 
-const mintNFT = async (name, description, media, data) => {
-  // const testdata = [{ key: "artist", value: "danish" }];
-  data = [data];
-  let resourceOwner = process.env.MY_ADDRESS;
-  let recipientAddress = process.env.MY_ADDRESS;
+const mintNFT = async (
+  name,
+  description,
+  media,
+  artist,
+  category,
+  artistImage,
+  avatarCollectionImg
+) => {
+  let resourceOwner = `${process.env.ACCOUNT_ADDRESS}`;
+  let recipientAddress = `${process.env.ACCOUNT_ADDRESS}`;
+  const transactionData = `
+  import NPMContract from ${process.env.NPMCONTRACT_ADDRESS}
+
+  transaction() {
+    
+      prepare(acct: AuthAccount) {
+          let data: {String: String}? = {
+            "artist": "${artist}",
+            "artistImage": "${artistImage}",
+            "artistCollectionAvatar": "${avatarCollectionImg}",
+            "category": "${category}"
+          }
+          let account = getAccount(${resourceOwner})
+          let adminRef = account.getCapability(NPMContract.NFTAdminResourcePublicPath)
+              .borrow<&{NPMContract.NFTAdminResourcePublic}>()
+              ?? panic("Could not borrow public sale reference")
+          adminRef.mintToken(name: "${name}", description: "${description}", media: "${media}", data: data, recipientAddress: ${recipientAddress})
+      }
+  }`;
 
   const transactionId = await fcl
     .send([
-      fcl.transaction`
-        import NPMContract from ${process.env.NPMCONTRACT_ADDRESS}
-  
-        transaction() {
-            prepare(acct: AuthAccount) {
-                let account = getAccount(${resourceOwner})
-                let adminRef = account.getCapability(NPMContract.NFTAdminResourcePublicPath)
-                    .borrow<&{NPMContract.NFTAdminResourcePublic}>()
-                    ?? panic("Could not borrow public sale reference")
-                adminRef.mintToken(name: ${name}, description: ${description}, media: ${media}, data: ${data}, recipientAddress: ${recipientAddress})
-            }
-        }`,
+      fcl.transaction(transactionData),
       fcl.proposer(authorizationFunction),
       fcl.authorizations([authorizationFunction]),
       fcl.payer(authorizationFunction),
@@ -36,7 +50,6 @@ const mintNFT = async (name, description, media, data) => {
     ])
     .then(fcl.decode);
 
-  //   console.log(transactionId);
   let response = await fcl.tx(transactionId).onceSealed();
   return response;
 };
@@ -293,7 +306,8 @@ const getUserFlowBalance = async (account) => {
       import FungibleToken from ${process.env.FUNGIBLETOKEN_ADDRESS}
       import FlowToken from ${process.env.FLOWTOKEN_ADDRESS}
       pub fun main():UFix64 {
-          let vaultRef = getAccount(${account})
+          let vaultRef = getAccount(${process.env.ACCOUNT_ADDRESS})
+          // let vaultRef = getAccount(${account})
           .getCapability(/public/flowTokenBalance)
           .borrow<&FlowToken.Vault{FungibleToken.Balance}>()
           ?? panic("Could not borrow Balance reference to the Vault")
@@ -302,6 +316,44 @@ const getUserFlowBalance = async (account) => {
       `,
     ])
     .then(fcl.decode);
+  return response;
+};
+
+const getUserNFTsDetial = async () => {
+  let resourceOwner = `${process.env.ACCOUNT_ADDRESS}`;
+  const response = await fcl
+    .send([
+      fcl.script`
+      import NPMContract from ${process.env.NPMCONTRACT_ADDRESS}
+
+      pub fun main() : {UInt64: AnyStruct}{
+          let account1 = getAccount(${resourceOwner})
+          let acct1Capability =  account1.getCapability(NPMContract.CollectionPublicPath)
+                                  .borrow<&{NPMContract.NPMContractCollectionPublic}>()
+                                  ??panic("could not borrow receiver reference ")
+      
+            let nftIds = acct1Capability.getIDs()
+      
+          var dict : {UInt64: AnyStruct} = {}
+      
+          for nftId in nftIds {
+               let nftData = acct1Capability.borrowNFTNPMContractContract(id: nftId)
+              var nftMetaData : {String:AnyStruct} = {}
+              
+              nftMetaData["name"] =nftData!.name;
+              nftMetaData["description"] = nftData!.description;
+              nftMetaData["media"] = nftData!.thumbnail;
+              nftMetaData["data"] = nftData!.data;
+              nftMetaData["creator"] = nftData!.author;
+              nftMetaData["ownerAdress"] = ${resourceOwner}
+              dict.insert(key: nftId,nftMetaData)
+          }
+          return dict
+      }
+      `,
+    ])
+    .then(fcl.decode);
+
   return response;
 };
 
@@ -317,4 +369,5 @@ module.exports = {
   getUserFlowBalance,
   createEmptySaleCollection,
   createEmptyNFTCollection,
+  getUserNFTsDetial,
 };
